@@ -1,8 +1,30 @@
 import type { Logos } from "@/lib/queries";
 import { LEAGUES } from "@/lib/data/leagues";
 import { cn } from "@/lib/utils";
-import { TeamMark } from "./bits";
 import { LogoImage } from "./logo-image";
+
+export function TeamMark({ name, className }: { name: string; className?: string }) {
+  const initials = name
+    .replace(/[^A-Za-z' ]/g, "")
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((w) => w[0])
+    .join("")
+    .slice(0, 3)
+    .toUpperCase();
+  // deterministic hue per team
+  let h = 0;
+  for (const ch of name) h = (h * 31 + ch.charCodeAt(0)) % 360;
+  return (
+    <div
+      className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-[11px] font-bold text-white", className)}
+      style={{ background: `hsl(${h} 45% 38%)` }}
+      aria-hidden
+    >
+      {initials}
+    </div>
+  );
+}
 
 /** TheSportsDB serves smaller copies of each image at <url>/tiny (50px) and <url>/small (250px). */
 const sized = (src: string, size: number) => (/\.thesportsdb\.com\/images\//.test(src) ? `${src}/${size <= 24 ? "tiny" : "small"}` : src);

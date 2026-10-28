@@ -3,6 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BarChart3, CalendarDays, Home, ListChecks, Settings, Ticket } from "lucide-react";
 import { LanguageSwitch } from "@/components/app/language-switch";
+import { ThemeSwitch } from "@/components/app/theme-switch";
 import { Logo } from "@/components/app/logo";
 import { SignOutButton } from "@/components/app/auth/sign-out-button";
 import { useT } from "@/lib/i18n/client";
@@ -47,8 +48,11 @@ export function Sidebar({ analyst, user }: { analyst: { name: string; keySet: bo
             </Link>
           ))}
         </nav>
-        <div className="mt-auto flex flex-col gap-4">
-          <LanguageSwitch />
+        <div className="mt-auto flex flex-col gap-3">
+          <div className="flex flex-col gap-2">
+            <LanguageSwitch />
+            <ThemeSwitch />
+          </div>
           <div className="flex items-center gap-3 px-2">
             <div className="flex h-9 w-9 items-center justify-center rounded-md bg-secondary text-xs font-semibold">AI</div>
             <div className="leading-tight">
@@ -74,7 +78,8 @@ export function Sidebar({ analyst, user }: { analyst: { name: string; keySet: bo
       <header className="sticky top-0 z-20 border-b bg-sidebar/95 backdrop-blur lg:hidden">
         <div className="flex items-center justify-between gap-3 px-4 py-3">
           <Logo className="text-lg" />
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
+            <ThemeSwitch className="w-24 text-[11px]" />
             <LanguageSwitch />
             <SignOutButton iconOnly />
           </div>

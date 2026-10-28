@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { cachedSettings, upcomingPicksLite } from "@/lib/data";
+import { Sparkles } from "lucide-react";
+import { cachedSettings, getTeamForms, upcomingPicksLite } from "@/lib/data";
 import { loadLogos } from "@/lib/queries";
 import { leagueName } from "@/lib/data/leagues";
 import { marketLabel } from "@/lib/model/markets";
@@ -15,12 +16,18 @@ import { BankrollWarning } from "@/components/app/bankroll-warning";
 import { LeagueLogo, TeamPair } from "@/components/app/logos";
 import { Num } from "@/components/app/num";
 import { PickActions } from "@/components/app/pick-actions";
+import { TeamForm } from "@/components/app/team-form";
 import { AddToTicket } from "@/components/app/ticket/add-to-ticket";
 import { fmtDay, fmtTime, ltr, money, pct } from "@/lib/utils";
 
 export default async function PicksPage() {
   const { t, locale } = getT();
-  const [picks, settings, logos] = await Promise.all([upcomingPicksLite(), cachedSettings(), loadLogos()]);
+  const [picks, settings, logos, teamForms] = await Promise.all([
+    upcomingPicksLite(),
+    cachedSettings(),
+    loadLogos(),
+    getTeamForms(),
+  ]);
   const ai = activeProvider(settings);
   const days = new Map<string, typeof picks>();
   for (const p of picks) {
@@ -63,12 +70,19 @@ export default async function PicksPage() {
                           <TeamPair match={p.match} logos={logos} />
                           <div className="min-w-0">
                             <div className="truncate font-medium hover:underline">{p.match.home} – {p.match.away}</div>
-                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                            <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
                               <span>
                                 <Num>{fmtTime(p.match.kickoff)}</Num> {t.common.utc} ·
                               </span>
                               <LeagueLogo code={p.match.league} name={leagueName(p.match.league, locale)} src={logos.league(p.match.league)} size={14} />
                               <span>{leagueName(p.match.league, locale)}</span>
+                              {(teamForms[p.match.home] || teamForms[p.match.away]) && (
+                                <span className="ms-1.5 hidden items-center gap-1 xl:inline-flex" title="Recent Form (Home vs Away)">
+                                  <TeamForm form={teamForms[p.match.home]} />
+                                  <span className="text-[10px] text-muted-foreground/60">vs</span>
+                                  <TeamForm form={teamForms[p.match.away]} />
+                                </span>
+                              )}
                             </div>
                           </div>
                         </Link>
@@ -86,7 +100,18 @@ export default async function PicksPage() {
                         </div>
                       </TableCell>
                       <TableCell className="text-end"><Num>{p.odds.toFixed(2)}</Num></TableCell>
-                      <TableCell className="text-end text-success"><Num>+{pct(p.edge)}</Num></TableCell>
+                      <TableCell className="text-end">
+                        {p.edge >= 0.1 ? (
+                          <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/15 px-2 py-0.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
+                            <Sparkles className="h-3 w-3 text-emerald-500" />
+                            <Num>+{pct(p.edge)}</Num>
+                          </span>
+                        ) : (
+                          <span className="text-success font-medium">
+                            <Num>+{pct(p.edge)}</Num>
+                          </span>
+                        )}
+                      </TableCell>
                       <TableCell className="text-end font-medium">
                         <Num>{p.stake.toFixed(2)}</Num>
                         {aboveMax(p.stake, settings) && (

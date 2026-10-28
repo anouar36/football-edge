@@ -146,6 +146,42 @@ export const matchDetail = cached(
   }
 );
 
+export type FormOutcome = "W" | "D" | "L";
+
+/** Recent match outcomes (up to 5, chronological oldest to newest) per team computed from finished matches. */
+export const getTeamForms = cached("team-forms", [TAG.matches], async (): Promise<Record<string, FormOutcome[]>> => {
+  const db = getDb();
+  const finished = await db
+    .select({
+      home: matches.home,
+      away: matches.away,
+      homeGoals: matches.homeGoals,
+      awayGoals: matches.awayGoals,
+    })
+    .from(matches)
+    .where(eq(matches.status, "FINISHED"))
+    .orderBy(desc(matches.kickoff))
+    .limit(300);
+
+  const forms: Record<string, FormOutcome[]> = {};
+  for (const m of finished) {
+    if (m.homeGoals == null || m.awayGoals == null) continue;
+    if (!forms[m.home]) forms[m.home] = [];
+    if (forms[m.home].length < 5) {
+      forms[m.home].push(m.homeGoals > m.awayGoals ? "W" : m.homeGoals < m.awayGoals ? "L" : "D");
+    }
+    if (!forms[m.away]) forms[m.away] = [];
+    if (forms[m.away].length < 5) {
+      forms[m.away].push(m.awayGoals > m.homeGoals ? "W" : m.awayGoals < m.homeGoals ? "L" : "D");
+    }
+  }
+
+  for (const team in forms) {
+    forms[team].reverse();
+  }
+  return forms;
+});
+
 /* ---------- performance ---------- */
 
 export type HistoryView = "all" | "placed";

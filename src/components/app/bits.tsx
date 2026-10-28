@@ -91,25 +91,4 @@ export function Empty({ title, children }: { title: string; children?: React.Rea
   );
 }
 
-export function TeamMark({ name, className }: { name: string; className?: string }) {
-  const initials = name
-    .replace(/[^A-Za-z' ]/g, "")
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((w) => w[0])
-    .join("")
-    .slice(0, 3)
-    .toUpperCase();
-  // deterministic hue per team
-  let h = 0;
-  for (const ch of name) h = (h * 31 + ch.charCodeAt(0)) % 360;
-  return (
-    <div
-      className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-[11px] font-bold text-white", className)}
-      style={{ background: `hsl(${h} 45% 38%)` }}
-      aria-hidden
-    >
-      {initials}
-    </div>
-  );
-}
+export { TeamMark } from "./logos";

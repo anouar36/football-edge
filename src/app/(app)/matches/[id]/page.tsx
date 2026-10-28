@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { CircleDot, Flag, Goal, Sparkles, Trophy } from "lucide-react";
-import { cachedSettings, matchDetail } from "@/lib/data";
+import { cachedSettings, getTeamForms, matchDetail } from "@/lib/data";
 import { loadLogos, pred, review } from "@/lib/queries";
 import { legFromLite, liteOf } from "@/lib/ticket-legs";
 import { leagueCountry, leagueName } from "@/lib/data/leagues";
@@ -16,6 +16,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { KV, PageHeader, ProbBar, ResultBadge, VerdictBadge } from "@/components/app/bits";
 import { LeagueLogo, TeamLogo } from "@/components/app/logos";
 import { Num } from "@/components/app/num";
+import { TeamForm } from "@/components/app/team-form";
 import { OddsFromImage, ValueCalculator } from "@/components/app/match-tools-lazy";
 import { PickActions } from "@/components/app/pick-actions";
 import { AddToTicket } from "@/components/app/ticket/add-to-ticket";
@@ -65,7 +66,12 @@ function ScoreGrid({ scores }: { scores: { score: string; p: number }[] }) {
 export default async function MatchPage({ params }: { params: { id: string } }) {
   const { t, locale } = getT();
   const id = decodeURIComponent(params.id);
-  const [{ match, picks: matchPicks }, settings, logos] = await Promise.all([matchDetail(id), cachedSettings(), loadLogos()]);
+  const [{ match, picks: matchPicks }, settings, logos, teamForms] = await Promise.all([
+    matchDetail(id),
+    cachedSettings(),
+    loadLogos(),
+    getTeamForms(),
+  ]);
   if (!match) notFound();
   const p = pred(match);
   const r = review(match);
@@ -167,6 +173,11 @@ export default async function MatchPage({ params }: { params: { id: string } }) 
                     <div>
                       <div className="label-xs">{team.side}</div>
                       <div className="text-xl font-semibold leading-tight">{team.name}</div>
+                      {teamForms[team.name] && (
+                        <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <TeamForm form={teamForms[team.name]} size="md" />
+                        </div>
+                      )}
                     </div>
                     <TeamLogo name={team.name} src={logos.team(team.name, match.league)} size={56} />
                   </div>

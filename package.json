@@ -19,7 +19,8 @@
     "qa:money": "tsx scripts/qa/money.ts",
     "qa:pipeline": "tsx scripts/qa/pipeline.ts",
     "qa:security": "tsx scripts/qa/security.ts",
-    "qa:perf": "tsx scripts/perf-test.ts"
+    "qa:perf": "tsx scripts/perf-test.ts",
+    "qa:ui": "tsx scripts/verify-ui.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.3.0",
