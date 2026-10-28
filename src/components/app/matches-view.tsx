@@ -112,6 +112,7 @@ export function MatchesView({
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
+            type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={
@@ -427,7 +428,7 @@ export function MatchesView({
                     size={16}
                   />
                   <span>{leagueName(selectedMatch.league, locale)}</span>
-                  <span>·</span>
+                  <span>,</span>
                   <span>
                     {fmtDate(selectedMatch.kickoff, locale)} <Num>{fmtTime(selectedMatch.kickoff)}</Num>
                   </span>
