@@ -1,0 +1,34 @@
+name: Daily analysis
+
+on:
+  schedule:
+    - cron: "0 7 * * *" # 07:00 UTC every day
+  workflow_dispatch: {}
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # Talks to the database directly, not through the website, so the dashboard
+      # login does not apply here: no ALLOWED_EMAILS or BETTER_AUTH_SECRET needed.
+      - run: npm run job:daily
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          # Only the key of the provider chosen in Settings is needed.
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          CLAUDE_MODEL: ${{ vars.CLAUDE_MODEL }}
+          OPENAI_MODEL: ${{ vars.OPENAI_MODEL }}
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
+          # Optional: the site's URL (e.g. https://football-edge-inky.vercel.app) and the cron secret, so the
+          # job clears the site's page cache when it finishes. Without them the pages update within 10 minutes.
+          APP_URL: ${{ vars.APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}

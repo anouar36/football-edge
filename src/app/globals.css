@@ -1,0 +1,62 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --canvas: 0 0% 93%;
+    --background: 0 0% 96%;
+    --foreground: 222 14% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 14% 10%;
+    --primary: 0 0% 4%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 222 14% 10%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 6% 46%;
+    --accent: 205 55% 90%;
+    --accent-foreground: 222 14% 10%;
+    --destructive: 356 70% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 152 52% 42%;
+    --success-foreground: 0 0% 100%;
+    --warning: 36 90% 50%;
+    --warning-foreground: 0 0% 100%;
+    --border: 220 13% 91%;
+    --input: 220 13% 88%;
+    --ring: 222 14% 10%;
+    --sidebar: 0 0% 97%;
+    --sidebar-active: 205 55% 88%;
+    --radius: 0.75rem;
+  }
+  .dark {
+    --canvas: 224 14% 6%;
+    --background: 224 14% 8%;
+    --foreground: 0 0% 96%;
+    --card: 224 14% 11%;
+    --card-foreground: 0 0% 96%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 224 14% 8%;
+    --secondary: 224 12% 16%;
+    --secondary-foreground: 0 0% 96%;
+    --muted: 224 12% 16%;
+    --muted-foreground: 220 8% 64%;
+    --accent: 207 40% 24%;
+    --accent-foreground: 0 0% 96%;
+    --border: 224 12% 18%;
+    --input: 224 12% 22%;
+    --ring: 0 0% 90%;
+    --sidebar: 224 14% 9%;
+    --sidebar-active: 207 40% 22%;
+  }
+  * { @apply border-border; }
+  body { @apply bg-canvas text-foreground antialiased; font-feature-settings: "tnum" 1; }
+  /* Letter-spacing breaks the joins between Arabic letters. Latin text that needs it sets lang="en". */
+  :lang(ar) { letter-spacing: 0 !important; }
+}
+
+@layer utilities {
+  .label-xs { @apply text-[11px] font-medium uppercase tracking-[0.06em] text-muted-foreground rtl:text-xs; }
+  .num { font-variant-numeric: tabular-nums; }
+}

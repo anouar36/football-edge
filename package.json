@@ -1,0 +1,76 @@
+{
+  "name": "football-edge",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "db:check": "tsx scripts/db-check.ts",
+    "db:push": "drizzle-kit push && tsx scripts/db-check.ts --tables",
+    "job:daily": "tsx scripts/daily.ts",
+    "job:settle": "tsx scripts/settle.ts",
+    "backtest": "tsx scripts/backtest.ts",
+    "test:model": "tsx scripts/test-model.ts",
+    "seed:demo": "tsx scripts/seed-demo.ts",
+    "logos:sync": "tsx scripts/logos-sync.ts",
+    "qa:money": "tsx scripts/qa/money.ts",
+    "qa:pipeline": "tsx scripts/qa/pipeline.ts",
+    "qa:security": "tsx scripts/qa/security.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.3.0",
+    "@google/genai": "^2.31.0",
+    "@radix-ui/react-dialog": "^1.3.1",
+    "@radix-ui/react-label": "^2.1.17",
+    "@radix-ui/react-scroll-area": "^1.4.0",
+    "@radix-ui/react-separator": "^1.2.0",
+    "@radix-ui/react-slider": "^1.6.1",
+    "@radix-ui/react-slot": "^1.5.0",
+    "@radix-ui/react-switch": "^1.4.1",
+    "@radix-ui/react-tooltip": "^1.4.1",
+    "@vercel/functions": "^3.10.3",
+    "better-auth": "^1.7.12",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "drizzle-orm": "^0.45.4",
+    "lucide-react": "^1.61.0",
+    "next": "^14.2.35",
+    "openai": "^7.43.0",
+    "papaparse": "^5.7.0",
+    "pg": "^8.23.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "recharts": "^3.10.1",
+    "tailwind-merge": "^3.7.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@next/bundle-analyzer": "^14.2.35",
+    "@types/node": "^22.20.5",
+    "@types/papaparse": "^5.5.2",
+    "@types/pg": "^8.23.1",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "autoprefixer": "^10.6.1",
+    "drizzle-kit": "^0.31.11",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "^14.2.35",
+    "playwright": "^1.64.1",
+    "postcss": "^8.5.31",
+    "tailwindcss": "^3.4.14",
+    "tailwindcss-animate": "^1.0.7",
+    "tsx": "^4.23.15",
+    "typescript": "^5.6.3"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "overrides": {
+    "next": {
+      "postcss": "^8.5.31"
+    }
+  }
+}
