@@ -4,66 +4,47 @@ import { isAllowedEmail } from "@/lib/auth/allowlist";
 import { cachedSessionEmail } from "@/lib/auth/session-cookie";
 
 /**
- * Every page and API route needs a valid session, except the login page, the
- * Better Auth endpoints and the cron endpoint (which checks CRON_SECRET itself).
- * Pages redirect to /login?next=<path>; API routes answer 401 JSON.
+ * Fast-path authentication at the edge.
  *
- * Fast path, on almost every request: the signed session copy in the cookie cache
- * (see lib/auth/session-cookie.ts) is checked here, with no network call and no database.
- * When it is missing or older than 5 minutes, the middleware asks /api/auth/get-session
- * (the Edge runtime cannot reach Postgres). That checks the session in the database,
- * drops one signed out from another device, and renews both cookies: they are forwarded
- * to the browser and to this request, so the page reads the fresh copy too.
- * Routes that write check the database again (denyAnonymous).
+ * 1. Public endpoints (/login, /api/auth/*, /api/cron/*) pass through immediately.
+ * 2. Unauthenticated visitors (no session cookie) are rejected at 0ms:
+ *    - Pages redirect to /login?next=<path>
+ *    - API routes return 401 JSON
+ * 3. Fast verification: checks the cryptographically signed cookie cache with zero
+ *    network or database overhead.
+ * 4. Cache-miss fallback: lets the request proceed to the Node.js runtime (AppLayout
+ *    for pages, denyAnonymous() for mutating APIs) which verifies the session in-process
+ *    against the database, eliminating slow Edge-to-Serverless HTTP subrequests.
  */
 export async function middleware(req: NextRequest) {
   const { pathname, search } = req.nextUrl;
-  if (pathname === "/login" || pathname.startsWith("/api/auth/") || pathname.startsWith("/api/cron/")) return NextResponse.next();
+  if (pathname === "/login" || pathname.startsWith("/api/auth/") || pathname.startsWith("/api/cron/")) {
+    return NextResponse.next();
+  }
 
-  if (isAllowedEmail(await cachedSessionEmail(req))) return NextResponse.next();
-
-  const { ok, setCookies } = await checkSession(req);
-  const res = !ok
-    ? pathname.startsWith("/api/")
+  // 1. Fast rejection if no session cookie exists
+  if (!getSessionCookie(req)) {
+    return pathname.startsWith("/api/")
       ? NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-      : NextResponse.redirect(loginUrl(req, pathname + search))
-    : setCookies.length
-      ? NextResponse.next({ request: { headers: withCookies(req, setCookies) } })
-      : NextResponse.next();
-  for (const c of setCookies) res.headers.append("set-cookie", c);
-  return res;
-}
-
-async function checkSession(req: NextRequest): Promise<{ ok: boolean; setCookies: string[] }> {
-  if (!getSessionCookie(req)) return { ok: false, setCookies: [] };
-  const headers = new Headers({ cookie: req.headers.get("cookie") ?? "" });
-  // Better Auth rate-limits per client IP.
-  const ip = req.headers.get("x-forwarded-for");
-  if (ip) headers.set("x-forwarded-for", ip);
-  try {
-    const r = await fetch(new URL("/api/auth/get-session", req.nextUrl.origin), { headers, cache: "no-store" });
-    const session = r.ok ? ((await r.json()) as { user?: { email?: string } } | null) : null;
-    return { ok: isAllowedEmail(session?.user?.email), setCookies: r.headers.getSetCookie() };
-  } catch {
-    return { ok: false, setCookies: [] };
+      : NextResponse.redirect(loginUrl(req, pathname + search));
   }
-}
 
-/** The request headers with the renewed cookies applied (an expired cookie is removed). */
-function withCookies(req: NextRequest, setCookies: string[]) {
-  const jar = new Map(req.cookies.getAll().map((c) => [c.name, c.value]));
-  for (const line of setCookies) {
-    const [pair, ...attrs] = line.split(";");
-    const eq = pair.indexOf("=");
-    if (eq < 1) continue;
-    const name = pair.slice(0, eq).trim();
-    const expired = attrs.some((a) => /^\s*max-age\s*=\s*0\s*$/i.test(a));
-    if (expired) jar.delete(name);
-    else jar.set(name, pair.slice(eq + 1).trim());
+  // 2. Fast authorization via signed session cookie cache (0ms, no DB)
+  const cachedEmail = await cachedSessionEmail(req);
+  if (cachedEmail) {
+    if (isAllowedEmail(cachedEmail)) {
+      return NextResponse.next();
+    }
+    // Signed session belongs to an email no longer allowed
+    return pathname.startsWith("/api/")
+      ? NextResponse.json({ error: "Forbidden" }, { status: 403 })
+      : NextResponse.redirect(loginUrl(req, pathname + search));
   }
-  const headers = new Headers(req.headers);
-  headers.set("cookie", Array.from(jar, ([k, v]) => `${k}=${v}`).join("; "));
-  return headers;
+
+  // 3. Cookie exists but cache is expired/missing: proceed directly to the Node.js
+  // layer (AppLayout / API handler), where getSession() / denyAnonymous() validates
+  // against the database in-process without an expensive Edge-to-Serverless HTTP waterfall.
+  return NextResponse.next();
 }
 
 function loginUrl(req: NextRequest, next: string) {
@@ -72,4 +53,6 @@ function loginUrl(req: NextRequest, next: string) {
   return url;
 }
 
-export const config = { matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"] };
+export const config = {
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|woff2?)$).*)"],
+};

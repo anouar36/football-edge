@@ -1,5 +1,5 @@
 import { and, asc, count, desc, eq, gte, inArray, ne, sql, type SQL } from "drizzle-orm";
-import { getReadyDb, getSettings } from "./db";
+import { getDb, getSettings } from "./db";
 import { TAG, cached } from "./cache";
 import { leagueLogos, matches, picks, runs, teamLogos, ticketLegs, tickets, type Match, type Pick } from "./schema";
 import type { PerfStats } from "./queries";
@@ -68,7 +68,7 @@ export type PickLite = Pick & { match: MatchLite };
 
 /** Open picks of matches that kicked off at most 3 hours ago, with their match. Same rows as upcomingPicks(). */
 const loadUpcoming = cached("upcoming-picks", [TAG.picks, TAG.matches], async (): Promise<PickLite[]> => {
-  const db = await getReadyDb();
+  const db = getDb();
   const rows = await db
     .select({ pick: picks, match: liteColumns })
     .from(picks)
@@ -103,7 +103,7 @@ const listColumns = {
 
 /** Upcoming matches (kicked off at most 3 hours ago), at most 200. */
 const loadUpcomingMatches = cached("matches-upcoming", [TAG.matches, TAG.picks], async (): Promise<MatchRow[]> => {
-  const db = await getReadyDb();
+  const db = getDb();
   return db
     .select(listColumns)
     .from(matches)
@@ -118,7 +118,7 @@ export async function upcomingMatches(now = Date.now()) {
 
 /** Finished matches, newest first, one page at a time. */
 export const finishedMatches = cached("matches-finished", [TAG.matches, TAG.picks], async (page: number) => {
-  const db = await getReadyDb();
+  const db = getDb();
   const [rows, [{ total }]] = await Promise.all([
     db
       .select(listColumns)
@@ -137,7 +137,7 @@ export const matchDetail = cached(
   "match-detail",
   (id: string) => [TAG.matches, TAG.match(id), TAG.picks],
   async (id: string): Promise<{ match: Match | null; picks: Pick[] }> => {
-    const db = await getReadyDb();
+    const db = getDb();
     const [[match], list] = await Promise.all([
       db.select().from(matches).where(eq(matches.id, id)),
       db.select().from(picks).where(eq(picks.matchId, id)).orderBy(desc(picks.edge)),
@@ -155,7 +155,7 @@ const decided = sql`${picks.result} IN ('WON', 'LOST')`;
 
 /** Settled-bet totals, computed by Postgres (one row however many picks there are). Only WON / LOST count, like perf(). */
 export const pickStats = cached("pick-stats", [TAG.picks, TAG.stats], async (view: HistoryView): Promise<Omit<PerfStats, "curve">> => {
-  const db = await getReadyDb();
+  const db = getDb();
   const [r] = await db
     .select({
       n: sql<number>`count(*) FILTER (WHERE ${decided})::int`,
@@ -176,7 +176,7 @@ const CURVE_POINTS = 400;
 
 /** Cumulative profit after each settled bet, oldest first, summed by Postgres. */
 export const profitCurve = cached("profit-curve", [TAG.picks, TAG.stats, TAG.matches], async (view: HistoryView): Promise<PerfStats["curve"]> => {
-  const db = await getReadyDb();
+  const db = getDb();
   const rows = await db
     .select({
       date: sql<string>`to_char(${matches.kickoff} AT TIME ZONE 'UTC', 'YYYY-MM-DD')`,
@@ -194,7 +194,7 @@ export const profitCurve = cached("profit-curve", [TAG.picks, TAG.stats, TAG.mat
 
 /** One page of settled bets, newest first. */
 export const settledPicks = cached("settled-picks", [TAG.picks, TAG.matches], async (view: HistoryView, page: number) => {
-  const db = await getReadyDb();
+  const db = getDb();
   const [rows, [{ total }]] = await Promise.all([
     db
       .select({ pick: picks, match: liteColumns })
@@ -224,7 +224,7 @@ const runColumns = {
 
 /** The last daily run (with the AI briefing) and the 5 most recent runs. The long `log` column is left out. */
 export const runsOverview = cached("runs", [TAG.runs], async () => {
-  const db = await getReadyDb();
+  const db = getDb();
   const [[lastDaily], recent] = await Promise.all([
     db
       .select({ ...runColumns, summary: runs.summary })
@@ -244,7 +244,7 @@ export const allLogos = cached(
   "logos",
   [TAG.logos],
   async () => {
-    const db = await getReadyDb();
+    const db = getDb();
     const [teams, leagues] = await Promise.all([
       db
         .select({ name: teamLogos.name, league: teamLogos.league, url: teamLogos.logoUrl })
@@ -265,7 +265,7 @@ export type TicketRow = typeof tickets.$inferSelect & {
 
 /** Saved tickets: settled totals and one page of tickets with their legs, newest first. */
 export const ticketsOverview = cached("tickets", [TAG.tickets, TAG.matches], async (page: number) => {
-  const db = await getReadyDb();
+  const db = getDb();
   const [[stats], list, [{ total }]] = await Promise.all([
     db
       .select({

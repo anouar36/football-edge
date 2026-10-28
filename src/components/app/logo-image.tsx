@@ -1,17 +1,31 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import React, { memo, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
-/** <img> that shows `fallback` instead when the image cannot load. */
-export function LogoImage({ src, alt, size, className, fallback }: { src: string; alt: string; size: number; className?: string; fallback: React.ReactNode }) {
+/** <img> that shows `fallback` instead when the image cannot load. Memoized to avoid unnecessary DOM re-renders. */
+export const LogoImage = memo(function LogoImage({
+  src,
+  alt,
+  size,
+  className,
+  fallback,
+}: {
+  src: string;
+  alt: string;
+  size: number;
+  className?: string;
+  fallback: React.ReactNode;
+}) {
   const ref = useRef<HTMLImageElement>(null);
   const [failed, setFailed] = useState<string | null>(null);
+
   useEffect(() => {
-    // onError is attached at hydration, so an image that failed before that never reports it.
     const img = ref.current;
     if (img?.complete && img.naturalWidth === 0) setFailed(src);
   }, [src]);
+
   if (failed === src) return <>{fallback}</>;
+
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
@@ -27,4 +41,4 @@ export function LogoImage({ src, alt, size, className, fallback }: { src: string
       style={{ width: size, height: size }}
     />
   );
-}
+});

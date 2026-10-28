@@ -7,7 +7,7 @@ import { z } from "zod";
 import { betterAuth, type BetterAuthPlugin } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError, createAuthEndpoint, createAuthMiddleware, sensitiveSessionMiddleware } from "better-auth/api";
-import { getReadyDb } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import * as schema from "@/lib/schema";
 import { authAccounts, authRateLimits, authSessions, authUsers, authVerifications } from "@/lib/schema";
 import { allowedEmails, isAllowedEmail } from "./allowlist";
@@ -130,8 +130,10 @@ const g = globalThis as unknown as { auth?: Auth };
 
 /** Created on first use (not at import), so `next build` does not need the database. */
 export async function getAuth(): Promise<Auth> {
-  const db = await getReadyDb();
-  g.auth ??= createAuth(db);
+  if (!g.auth) {
+    const db = getDb();
+    g.auth = createAuth(db);
+  }
   return g.auth;
 }
 
@@ -162,14 +164,14 @@ export async function denyAnonymous(): Promise<NextResponse | null> {
 
 /** True before the first account exists: the login page then shows "Create your account". */
 export async function isFirstRun(): Promise<boolean> {
-  const db = await getReadyDb();
+  const db = getDb();
   const [any] = await db.select({ id: authUsers.id }).from(authUsers).limit(1);
   return !any;
 }
 
 /** Each email of ALLOWED_EMAILS with its account's name, or null when it has no account yet. */
 export async function peopleWithAccess(): Promise<{ email: string; name: string | null }[]> {
-  const db = await getReadyDb();
+  const db = getDb();
   const users = await db.select({ name: authUsers.name, email: authUsers.email }).from(authUsers);
   const names = new Map(users.map((u) => [u.email.toLowerCase(), u.name]));
   return allowedEmails().map((email) => ({ email, name: names.get(email) ?? null }));

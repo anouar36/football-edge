@@ -13,7 +13,14 @@ function connect() {
   const { connectionString, ssl } = pgConfig();
   // Idle connections stay open 30 s (pg's default is 10 s): a new TLS connection to Neon costs
   // several round trips, and clicks through the dashboard are usually more than 10 s apart.
-  const pool = new Pool({ connectionString, ssl, max: 5, idleTimeoutMillis: 30_000, connectionTimeoutMillis: 15_000 });
+  const pool = new Pool({
+    connectionString,
+    ssl,
+    max: process.env.NODE_ENV === "production" ? 3 : 5,
+    idleTimeoutMillis: 30_000,
+    connectionTimeoutMillis: 10_000,
+    allowExitOnIdle: true,
+  });
   // On Vercel Fluid compute: keeps the instance alive until idle connections are closed cleanly. No-op elsewhere.
   attachDatabasePool(pool);
   return { pool, db: drizzle(pool, { schema }) };
@@ -42,11 +49,12 @@ export async function getReadyDb() {
 }
 
 export async function getSettings() {
-  const db = await getReadyDb();
+  const db = getDb();
   const [row] = await db.select().from(settings).where(eq(settings.id, 1));
   if (row) return row;
-  const [created] = await db.insert(settings).values({ id: 1 }).onConflictDoNothing().returning();
-  return created ?? (await db.select().from(settings).where(eq(settings.id, 1)))[0];
+  const ready = await getReadyDb();
+  const [created] = await ready.insert(settings).values({ id: 1 }).onConflictDoNothing().returning();
+  return created ?? (await ready.select().from(settings).where(eq(settings.id, 1)))[0];
 }
 
 /** Picks joined with their match. */

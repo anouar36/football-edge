@@ -76,6 +76,7 @@ export const picks = pgTable(
   },
   (t) => [
     uniqueIndex("picks_match_key_uq").on(t.matchId, t.key),
+    index("picks_match_edge_idx").on(t.matchId, t.edge),
     index("picks_run_date_idx").on(t.runDate),
     index("picks_result_status_idx").on(t.result, t.status),
   ]
