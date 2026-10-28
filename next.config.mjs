@@ -19,18 +19,7 @@ const nextConfig = {
     // Keep pages fetched during client navigation for 30 s, so going back to a page is instant.
     // Every action in the app calls router.refresh(), which empties this cache: no stale data after your own click.
     staleTimes: { dynamic: 30, static: 180 },
-    optimizePackageImports: [
-      "lucide-react",
-      "recharts",
-      "@radix-ui/react-dialog",
-      "@radix-ui/react-label",
-      "@radix-ui/react-scroll-area",
-      "@radix-ui/react-separator",
-      "@radix-ui/react-slider",
-      "@radix-ui/react-slot",
-      "@radix-ui/react-switch",
-      "@radix-ui/react-tooltip",
-    ],
+    optimizePackageImports: ["lucide-react"],
   },
   // No other site may frame the dashboard (its Place and Settings buttons cannot be clickjacked), no MIME sniffing.
   async headers() {
