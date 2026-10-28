@@ -21,7 +21,9 @@ export interface Logos {
  * Team and league logos, from the cached logo table (data.ts allLogos: no query on most requests).
  * Logos are decoration: if the read fails the page still renders, with initials.
  */
-export const loadLogos = cache(async (): Promise<Logos> => {
+const dedupe: <F extends (...args: never[]) => unknown>(fn: F) => F = typeof cache === "function" ? cache : (fn) => fn;
+
+export const loadLogos = dedupe(async (): Promise<Logos> => {
   let teams = new Map<string, string>();
   let leagues = new Map<string, string>();
   try {

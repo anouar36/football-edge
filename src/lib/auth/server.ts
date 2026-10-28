@@ -137,12 +137,14 @@ export async function getAuth(): Promise<Auth> {
   return g.auth;
 }
 
+const dedupe: <F extends (...args: never[]) => unknown>(fn: F) => F = typeof cache === "function" ? cache : (fn) => fn;
+
 /**
  * The signed-in session for this request, or null (also when the email is no longer allowed).
  * Read from the signed cookie cache when it is fresh (no database), once per request: the layout,
  * the page and the ticket panel share the result. Never cached across requests.
  */
-export const getSession = cache(async (): Promise<AuthSession | null> => {
+export const getSession = dedupe(async (): Promise<AuthSession | null> => {
   const s = await (await getAuth()).api.getSession({ headers: headers() });
   return s && isAllowedEmail(s.user.email) ? s : null;
 });
