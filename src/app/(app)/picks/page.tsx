@@ -69,10 +69,10 @@ export default async function PicksPage() {
                         <Link href={`/matches/${encodeURIComponent(p.matchId)}`} className="flex items-center gap-3">
                           <TeamPair match={p.match} logos={logos} />
                           <div className="min-w-0">
-                            <div className="truncate font-medium hover:underline">{p.match.home} – {p.match.away}</div>
+                            <div className="truncate font-medium hover:underline">{p.match.home} vs {p.match.away}</div>
                             <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
                               <span>
-                                <Num>{fmtTime(p.match.kickoff)}</Num> {t.common.utc} ·
+                                <Num>{fmtTime(p.match.kickoff)}</Num> {t.common.utc},
                               </span>
                               <LeagueLogo code={p.match.league} name={leagueName(p.match.league, locale)} src={logos.league(p.match.league)} size={14} />
                               <span>{leagueName(p.match.league, locale)}</span>
@@ -102,8 +102,8 @@ export default async function PicksPage() {
                       <TableCell className="text-end"><Num>{p.odds.toFixed(2)}</Num></TableCell>
                       <TableCell className="text-end">
                         {p.edge >= 0.1 ? (
-                          <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/15 px-2 py-0.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
-                            <Sparkles className="h-3 w-3 text-emerald-500" />
+                          <span className="inline-flex items-center gap-1 rounded-md bg-success/15 px-2 py-0.5 text-xs font-medium text-success border border-success/30">
+                            <Sparkles className="h-3 w-3 text-success" />
                             <Num>+{pct(p.edge)}</Num>
                           </span>
                         ) : (

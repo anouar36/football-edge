@@ -42,10 +42,10 @@ export function PickActions({
           disabled={pending}
           onClick={() => set(status === "PLACED" ? "SUGGESTED" : "PLACED")}
           className={cn(
-            "h-7 text-xs font-medium transition-all shadow-none",
+            "h-7 text-xs font-medium transition-colors shadow-none",
             status === "PLACED"
-              ? "bg-emerald-600 hover:bg-emerald-700 text-white gap-1"
-              : "border border-emerald-600/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-600 hover:text-white"
+              ? "bg-success hover:bg-success/90 text-success-foreground gap-1"
+              : "border border-success/30 bg-success/10 text-success hover:bg-success hover:text-success-foreground"
           )}
         >
           {status === "PLACED" && <Check className="h-3 w-3" />}
@@ -60,7 +60,7 @@ export function PickActions({
             "h-7 text-xs transition-colors",
             status === "SKIPPED"
               ? "text-primary hover:bg-secondary gap-1"
-              : "text-muted-foreground hover:bg-rose-500/10 hover:text-rose-600"
+              : "text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
           )}
         >
           {status === "SKIPPED" && <Undo2 className="h-3 w-3" />}
@@ -74,10 +74,10 @@ export function PickActions({
     <div className={cn("flex flex-col gap-2.5", className)}>
       <Button
         className={cn(
-          "w-full font-medium transition-all",
+          "w-full font-medium transition-colors",
           status === "PLACED"
-            ? "bg-emerald-600 hover:bg-emerald-700 text-white"
-            : "bg-emerald-600 hover:bg-emerald-700 text-white"
+            ? "bg-success hover:bg-success/90 text-success-foreground"
+            : "bg-success hover:bg-success/90 text-success-foreground"
         )}
         disabled={pending}
         onClick={() => set(status === "PLACED" ? "SUGGESTED" : "PLACED")}

@@ -1,3 +1,5 @@
+/* Hallmark · shape: app screen · genre: modern-minimal · theme: custom (technical quantitative football analytics) */
+/* Hallmark · pre-emit critique: P5 H5 E5 S5 R5 V4 · weakest: V, high-frequency quant table design adheres to utilitarian speed */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -51,12 +53,21 @@
     --sidebar-active: 207 40% 22%;
   }
   * { @apply border-border; }
-  body { @apply bg-canvas text-foreground antialiased; font-feature-settings: "tnum" 1; }
+  html, body {
+    overflow-x: clip;
+  }
+  body {
+    @apply bg-canvas text-foreground antialiased;
+    font-feature-settings: "tnum" 1;
+  }
+  button:active, a:active {
+    transform: translateY(0.5px);
+  }
   /* Letter-spacing breaks the joins between Arabic letters. Latin text that needs it sets lang="en". */
   :lang(ar) { letter-spacing: 0 !important; }
 }
 
 @layer utilities {
-  .label-xs { @apply text-[11px] font-medium uppercase tracking-[0.06em] text-muted-foreground rtl:text-xs; }
+  .label-xs { @apply text-[11px] font-medium text-muted-foreground rtl:text-xs; }
   .num { font-variant-numeric: tabular-nums; }
 }

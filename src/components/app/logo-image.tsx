@@ -9,12 +9,14 @@ export const LogoImage = memo(function LogoImage({
   size,
   className,
   fallback,
+  priority = false,
 }: {
   src: string;
   alt: string;
   size: number;
   className?: string;
   fallback: React.ReactNode;
+  priority?: boolean;
 }) {
   const ref = useRef<HTMLImageElement>(null);
   const [failed, setFailed] = useState<string | null>(null);
@@ -34,7 +36,8 @@ export const LogoImage = memo(function LogoImage({
       alt={alt}
       width={size}
       height={size}
-      loading="lazy"
+      loading={priority ? "eager" : "lazy"}
+      fetchPriority={priority ? "high" : "auto"}
       decoding="async"
       onError={() => setFailed(src)}
       className={cn("shrink-0 rounded object-contain", className)}

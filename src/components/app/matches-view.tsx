@@ -238,7 +238,7 @@ export function MatchesView({
                           className="truncate font-medium hover:underline block"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          {m.home} – {m.away}
+                          {m.home} vs {m.away}
                         </Link>
                         <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
                           <LeagueLogo
@@ -378,7 +378,7 @@ export function MatchesView({
                   <TableCell>
                     {past ? (
                       <Num className="font-medium">
-                        {m.homeGoals}–{m.awayGoals}
+                        {m.homeGoals}:{m.awayGoals}
                       </Num>
                     ) : m.pick ? (
                       <span className="inline-flex items-center gap-1.5">
@@ -388,7 +388,7 @@ export function MatchesView({
                         {pickLeg && <AddToTicket leg={pickLeg} />}
                       </span>
                     ) : (
-                      <span className="text-muted-foreground">—</span>
+                      <span className="text-muted-foreground">-</span>
                     )}
                   </TableCell>
 
@@ -453,15 +453,15 @@ export function MatchesView({
                     <TeamForm form={teamForms?.[selectedMatch.home]} size="sm" />
                   </div>
 
-                  {/* Middle score or VS */}
+                  {/* Middle score or vs */}
                   <div className="flex flex-col items-center justify-center px-2">
                     {past ? (
                       <div className="text-2xl font-bold tracking-tight">
-                        <Num>{selectedMatch.homeGoals} - {selectedMatch.awayGoals}</Num>
+                        <Num>{selectedMatch.homeGoals} : {selectedMatch.awayGoals}</Num>
                       </div>
                     ) : (
-                      <div className="rounded-full bg-secondary px-2.5 py-1 text-xs font-semibold text-muted-foreground uppercase">
-                        VS
+                      <div className="rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-muted-foreground">
+                        vs
                       </div>
                     )}
                   </div>
@@ -483,29 +483,29 @@ export function MatchesView({
 
               {/* Dixon-Coles Probabilities & xG */}
               <div className="flex flex-col gap-3">
-                <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                <div className="flex items-center justify-between text-xs font-medium text-muted-foreground">
                   <span>{locale === "ar" ? "احتمالات ديسكون-كولز" : "Model Probabilities (1X2)"}</span>
                   {selectedMatch.xgHome != null && selectedMatch.xgAway != null && (
-                    <span className="font-mono text-foreground font-medium">
-                      xG: {selectedMatch.xgHome.toFixed(2)} - {selectedMatch.xgAway.toFixed(2)}
+                    <span className="text-xs text-muted-foreground">
+                      xG <Num className="font-semibold text-foreground">{selectedMatch.xgHome.toFixed(2)} : {selectedMatch.xgAway.toFixed(2)}</Num>
                     </span>
                   )}
                 </div>
 
                 <div className="grid grid-cols-3 gap-2 text-center">
-                  <div className="rounded-lg border bg-secondary/40 p-2.5">
+                  <div className="rounded-lg bg-secondary/60 p-2.5">
                     <div className="text-[11px] text-muted-foreground truncate">{selectedMatch.home}</div>
                     <div className="mt-1 text-lg font-bold text-foreground">
                       <Num>{pct(selectedMatch.probs["1X2:HOME"], 1)}</Num>
                     </div>
                   </div>
-                  <div className="rounded-lg border bg-secondary/40 p-2.5">
+                  <div className="rounded-lg bg-secondary/60 p-2.5">
                     <div className="text-[11px] text-muted-foreground">{t.table.draw}</div>
                     <div className="mt-1 text-lg font-bold text-foreground">
                       <Num>{pct(selectedMatch.probs["1X2:DRAW"], 1)}</Num>
                     </div>
                   </div>
-                  <div className="rounded-lg border bg-secondary/40 p-2.5">
+                  <div className="rounded-lg bg-secondary/60 p-2.5">
                     <div className="text-[11px] text-muted-foreground truncate">{selectedMatch.away}</div>
                     <div className="mt-1 text-lg font-bold text-foreground">
                       <Num>{pct(selectedMatch.probs["1X2:AWAY"], 1)}</Num>

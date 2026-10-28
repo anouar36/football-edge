@@ -16,7 +16,7 @@ async function capture() {
   const page = await context.newPage();
   const baseUrl = "http://localhost:3000";
 
-  // Login
+  console.log("1. Authenticating...");
   await page.goto(`${baseUrl}/login`, { waitUntil: "networkidle" });
   await page.fill('input[type="email"]', "ndnd15237@gmail.com");
   await page.fill('input[type="password"]', "EdgeXI#2026!");
@@ -25,25 +25,44 @@ async function capture() {
     page.click('button[type="submit"]'),
   ]);
 
-  // Dashboard
+  console.log("2. Dashboard (Arabic RTL Dark)...");
   await page.goto(`${baseUrl}/`, { waitUntil: "networkidle" });
-  await page.screenshot({ path: path.join(outDir, "1-dashboard.png"), fullPage: true });
+  await page.waitForTimeout(400);
+  const darkBtn = page.locator('button[role="radio"][aria-label*="داكن"], button[role="radio"][aria-label*="Dark"]').first();
+  if (await darkBtn.isVisible()) {
+    await darkBtn.click();
+    await page.waitForTimeout(300);
+  }
+  await page.screenshot({ path: path.join(outDir, "hallmark-dashboard-dark-ar.png"), fullPage: true });
 
-  // Picks
+  console.log("3. Picks Page (Arabic RTL Dark)...");
   await page.goto(`${baseUrl}/picks`, { waitUntil: "networkidle" });
-  await page.screenshot({ path: path.join(outDir, "2-picks.png"), fullPage: true });
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: path.join(outDir, "hallmark-picks-dark-ar.png"), fullPage: true });
 
-  // Matches
+  console.log("4. Matches Page (Arabic RTL Dark)...");
   await page.goto(`${baseUrl}/matches`, { waitUntil: "networkidle" });
-  await page.screenshot({ path: path.join(outDir, "3-matches.png"), fullPage: true });
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: path.join(outDir, "hallmark-matches-dark-ar.png"), fullPage: true });
 
-  // History
-  await page.goto(`${baseUrl}/history`, { waitUntil: "networkidle" });
-  await page.screenshot({ path: path.join(outDir, "4-history.png"), fullPage: true });
+  console.log("5. Quick View Drawer (Arabic RTL Dark)...");
+  const quickViewBtn = page.locator('button[aria-label="Quick view"]').first();
+  if (await quickViewBtn.isVisible()) {
+    await quickViewBtn.click();
+    await page.waitForTimeout(700);
+    await page.screenshot({ path: path.join(outDir, "hallmark-matches-drawer-ar.png"), fullPage: false });
+    // Close the drawer
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(500);
+  }
 
-  // Settings
-  await page.goto(`${baseUrl}/settings`, { waitUntil: "networkidle" });
-  await page.screenshot({ path: path.join(outDir, "5-settings.png"), fullPage: true });
+  console.log("6. Switching to English LTR...");
+  const enBtn = page.locator('button[role="radio"]:has-text("English")').first();
+  if (await enBtn.isVisible()) {
+    await enBtn.click();
+    await page.waitForTimeout(600);
+    await page.screenshot({ path: path.join(outDir, "hallmark-matches-en.png"), fullPage: true });
+  }
 
   await browser.close();
   console.log("Screenshots captured successfully to:", outDir);
@@ -53,4 +72,3 @@ capture().catch((e) => {
   console.error("Failed:", e);
   process.exit(1);
 });
-

@@ -36,11 +36,11 @@ export function TeamForm({ form, size = "sm", className, labels }: TeamFormProps
               "inline-flex items-center justify-center rounded-sm font-semibold select-none",
               isMd ? "h-5 w-5 text-[11px]" : "h-4 w-4 text-[9px]",
               outcome === "W" &&
-                "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30",
+                "bg-success/15 text-success border border-success/30",
               outcome === "D" &&
-                "bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30",
+                "bg-warning/15 text-warning border border-warning/30",
               outcome === "L" &&
-                "bg-rose-500/15 text-rose-700 dark:text-rose-400 border border-rose-500/30"
+                "bg-destructive/15 text-destructive border border-destructive/30"
             )}
           >
             {outcome}
