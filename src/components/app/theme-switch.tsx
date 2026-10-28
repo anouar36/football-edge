@@ -8,11 +8,9 @@ export type Theme = "light" | "dark";
 
 export function ThemeSwitch({ className }: { className?: string }) {
   const [theme, setTheme] = useState<Theme>("light");
-  const [mounted, setMounted] = useState(false);
   const { locale } = useT();
 
   useEffect(() => {
-    setMounted(true);
     const isDark =
       document.documentElement.classList.contains("dark") ||
       localStorage.getItem("theme") === "dark" ||
@@ -34,16 +32,11 @@ export function ThemeSwitch({ className }: { className?: string }) {
     }
   };
 
-  if (!mounted) {
-    return (
-      <div className={cn("flex h-8 w-24 rounded-lg bg-secondary p-1", className)} />
-    );
-  }
-
   return (
     <div
       role="radiogroup"
       aria-label="Theme mode"
+      suppressHydrationWarning
       className={cn("flex gap-1 rounded-lg bg-secondary p-1 text-xs", className)}
     >
       <button
@@ -52,6 +45,7 @@ export function ThemeSwitch({ className }: { className?: string }) {
         aria-checked={theme === "light"}
         onClick={() => toggle("light")}
         aria-label="Light mode"
+        suppressHydrationWarning
         className={cn(
           "flex flex-1 items-center justify-center gap-1.5 rounded-md px-2 py-1 text-xs transition-colors",
           theme === "light"
@@ -68,6 +62,7 @@ export function ThemeSwitch({ className }: { className?: string }) {
         aria-checked={theme === "dark"}
         onClick={() => toggle("dark")}
         aria-label="Dark mode"
+        suppressHydrationWarning
         className={cn(
           "flex flex-1 items-center justify-center gap-1.5 rounded-md px-2 py-1 text-xs transition-colors",
           theme === "dark"

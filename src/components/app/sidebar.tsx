@@ -79,8 +79,8 @@ export function Sidebar({ analyst, user }: { analyst: { name: string; keySet: bo
         <div className="flex items-center justify-between gap-3 px-4 py-3">
           <Logo className="text-lg" />
           <div className="flex items-center gap-1.5">
-            <ThemeSwitch className="w-24 text-[11px]" />
             <LanguageSwitch />
+            <ThemeSwitch className="w-24 text-[11px]" />
             <SignOutButton iconOnly />
           </div>
         </div>

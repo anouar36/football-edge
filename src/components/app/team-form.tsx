@@ -50,3 +50,4 @@ export function TeamForm({ form, size = "sm", className, labels }: TeamFormProps
     </div>
   );
 }
+
