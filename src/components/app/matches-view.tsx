@@ -73,8 +73,8 @@ export function MatchesView({
 
   const logos = useMemo(
     () => ({
-      team: (name: string, league: string) => logoMap.teams[`${name}|${league}`] ?? null,
-      league: (code: string) => logoMap.leagues[code] ?? null,
+      team: (name: string, league: string) => logoMap?.teams?.[`${name}|${league}`] ?? null,
+      league: (code: string) => logoMap?.leagues?.[code] ?? null,
     }),
     [logoMap]
   );
@@ -82,8 +82,8 @@ export function MatchesView({
   // League options with counts
   const leagues = useMemo(() => {
     const counts = new Map<string, number>();
-    for (const m of matches) {
-      counts.set(m.league, (counts.get(m.league) ?? 0) + 1);
+    for (const m of (matches ?? [])) {
+      if (m?.league) counts.set(m.league, (counts.get(m.league) ?? 0) + 1);
     }
     return Array.from(counts.entries()).sort((a, b) => b[1] - a[1]);
   }, [matches]);
@@ -91,14 +91,15 @@ export function MatchesView({
   // Filtered matches
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
-    return matches.filter((m) => {
+    return (matches ?? []).filter((m) => {
+      if (!m) return false;
       if (selectedLeague !== "ALL" && m.league !== selectedLeague) return false;
       if (!query) return true;
-      const lName = leagueName(m.league, locale).toLowerCase();
+      const lName = leagueName(m.league, locale)?.toLowerCase() ?? "";
       return (
-        m.home.toLowerCase().includes(query) ||
-        m.away.toLowerCase().includes(query) ||
-        m.league.toLowerCase().includes(query) ||
+        m.home?.toLowerCase().includes(query) ||
+        m.away?.toLowerCase().includes(query) ||
+        m.league?.toLowerCase().includes(query) ||
         lName.includes(query)
       );
     });
@@ -247,14 +248,14 @@ export function MatchesView({
                             size={14}
                           />
                           <span>{leagueName(m.league, locale)}</span>
-                          {(teamForms[m.home] || teamForms[m.away]) && (
+                          {(teamForms?.[m.home] || teamForms?.[m.away]) && (
                             <span
                               className="ms-1 hidden items-center gap-1 xl:inline-flex"
                               title="Recent Form (Home vs Away)"
                             >
-                              <TeamForm form={teamForms[m.home]} />
+                              <TeamForm form={teamForms?.[m.home]} />
                               <span className="text-[10px] text-muted-foreground/60">vs</span>
-                              <TeamForm form={teamForms[m.away]} />
+                              <TeamForm form={teamForms?.[m.away]} />
                             </span>
                           )}
                         </div>
@@ -449,7 +450,7 @@ export function MatchesView({
                     <div className="font-semibold text-sm leading-tight line-clamp-2">
                       {selectedMatch.home}
                     </div>
-                    <TeamForm form={teamForms[selectedMatch.home]} size="sm" />
+                    <TeamForm form={teamForms?.[selectedMatch.home]} size="sm" />
                   </div>
 
                   {/* Middle score or VS */}
@@ -475,7 +476,7 @@ export function MatchesView({
                     <div className="font-semibold text-sm leading-tight line-clamp-2">
                       {selectedMatch.away}
                     </div>
-                    <TeamForm form={teamForms[selectedMatch.away]} size="sm" />
+                    <TeamForm form={teamForms?.[selectedMatch.away]} size="sm" />
                   </div>
                 </div>
               </div>

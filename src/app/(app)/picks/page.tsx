@@ -76,11 +76,11 @@ export default async function PicksPage() {
                               </span>
                               <LeagueLogo code={p.match.league} name={leagueName(p.match.league, locale)} src={logos.league(p.match.league)} size={14} />
                               <span>{leagueName(p.match.league, locale)}</span>
-                              {(teamForms[p.match.home] || teamForms[p.match.away]) && (
+                              {(teamForms?.[p.match.home] || teamForms?.[p.match.away]) && (
                                 <span className="ms-1.5 hidden items-center gap-1 xl:inline-flex" title="Recent Form (Home vs Away)">
-                                  <TeamForm form={teamForms[p.match.home]} />
+                                  <TeamForm form={teamForms?.[p.match.home]} />
                                   <span className="text-[10px] text-muted-foreground/60">vs</span>
-                                  <TeamForm form={teamForms[p.match.away]} />
+                                  <TeamForm form={teamForms?.[p.match.away]} />
                                 </span>
                               )}
                             </div>

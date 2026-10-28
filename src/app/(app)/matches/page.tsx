@@ -18,11 +18,11 @@ export default async function MatchesPage({ searchParams }: { searchParams: { pa
   ]);
 
   const logoMap = {
-    teams: Object.fromEntries(logoPairs.teams),
-    leagues: Object.fromEntries(logoPairs.leagues),
+    teams: Object.fromEntries(logoPairs?.teams ?? []),
+    leagues: Object.fromEntries(logoPairs?.leagues ?? []),
   };
 
-  const matches = list.rows;
+  const matches = list?.rows ?? [];
 
   return (
     <div className="flex flex-col gap-6">
