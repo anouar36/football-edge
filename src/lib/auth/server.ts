@@ -64,6 +64,7 @@ const addUser = {
 function createAuth(db: NodePgDatabase<typeof schema>) {
   return betterAuth({
     appName: "EdgeXI",
+    baseURL: process.env.BETTER_AUTH_URL || (process.env.NODE_ENV === "production" ? undefined : "http://localhost:3000"),
     database: drizzleAdapter(db, {
       provider: "pg",
       schema: { user: authUsers, session: authSessions, account: authAccounts, verification: authVerifications, rateLimit: authRateLimits },
