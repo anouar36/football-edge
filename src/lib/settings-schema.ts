@@ -28,5 +28,13 @@ export const settingsSchema = z.object({
     .transform((v) => v || null),
   // Name the ticket advice addresses.
   displayName: z.string().trim().min(1).max(40),
+  telegramAlerts: z.boolean().default(false),
+  telegramChatId: z
+    .string()
+    .trim()
+    .max(50)
+    .nullable()
+    .transform((v) => v || null)
+    .default(null),
 });
 export type SettingsInput = z.infer<typeof settingsSchema>;

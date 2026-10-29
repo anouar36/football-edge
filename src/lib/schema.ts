@@ -21,6 +21,8 @@ export const settings = pgTable("settings", {
   llmProvider: text("llm_provider").notNull().default("anthropic"), // anthropic | openai | gemini
   llmModel: text("llm_model"), // null = the provider's default model
   displayName: text("display_name").notNull().default("Anouar"), // used by the ticket advice
+  telegramAlerts: boolean("telegram_alerts").notNull().default(false),
+  telegramChatId: text("telegram_chat_id"),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

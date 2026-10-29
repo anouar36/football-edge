@@ -7,3 +7,5 @@ next-env.d.ts
 .vercel
 .env*
 strix_runs/
+.agents/
+skills-lock.json
