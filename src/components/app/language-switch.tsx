@@ -16,8 +16,9 @@ export function LanguageSwitch({ className }: { className?: string }) {
     <div
       role="radiogroup"
       aria-label={t.language.label}
+      translate="no"
       suppressHydrationWarning
-      className={cn("flex gap-1 rounded-lg bg-secondary p-1 text-xs", pending && "opacity-60", className)}
+      className={cn("notranslate flex gap-1 rounded-lg bg-secondary p-1 text-xs", pending && "opacity-60", className)}
     >
       {LOCALES.map((l) => (
         <button

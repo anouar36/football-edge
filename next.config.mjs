@@ -15,14 +15,11 @@ const nextConfig = {
       { protocol: "https", hostname: "media.api-sports.io" },
     ],
   },
-  experimental: {
-    optimizePackageImports: ["lucide-react"],
-  },
-  // No other site may frame the dashboard (its Place and Settings buttons cannot be clickjacked), no MIME sniffing.
+  // Security headers for all application routes and APIs (excluding internal Next static assets)
   async headers() {
     return [
       {
-        source: "/:path*",
+        source: "/((?!_next/static|_next/image|favicon.ico).*)",
         headers: [
           { key: "X-Frame-Options", value: "DENY" },
           { key: "Content-Security-Policy", value: "frame-ancestors 'none'" },
