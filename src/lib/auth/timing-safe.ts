@@ -15,3 +15,4 @@ export function safeEqual(a: string | null | undefined, b: string | null | undef
   }
   return timingSafeEqual(bufA, bufB);
 }
+

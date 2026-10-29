@@ -19,6 +19,7 @@
     "qa:money": "tsx scripts/qa/money.ts",
     "qa:pipeline": "tsx scripts/qa/pipeline.ts",
     "qa:security": "tsx scripts/qa/security.ts",
+    "qa:pentest": "tsx scripts/qa/deep-pentest.ts",
     "qa:perf": "tsx scripts/perf-test.ts",
     "qa:ui": "tsx scripts/verify-ui.ts"
   },
