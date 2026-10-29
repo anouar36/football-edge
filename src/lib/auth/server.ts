@@ -72,6 +72,8 @@ function createAuth(db: NodePgDatabase<typeof schema>) {
     // Passwords: 8 to 128 characters, hashed with scrypt.
     emailAndPassword: { enabled: true },
     session: {
+      // freshAge: 0 skips Better Auth's 24h freshness check so active sessions don't throw SESSION_NOT_FRESH.
+      freshAge: 0,
       // A signed copy of the session in a cookie (HMAC with BETTER_AUTH_SECRET), valid 5 minutes: the
       // middleware and getSession() read it without the database. After 5 minutes the middleware asks
       // /api/auth/get-session again, which checks the database and renews it. So a session signed out
