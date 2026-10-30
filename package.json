@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
+    "telegram:bot": "tsx scripts/telegram-bot.ts",
     "db:check": "tsx scripts/db-check.ts",
     "db:push": "drizzle-kit push && tsx scripts/db-check.ts --tables",
     "job:daily": "tsx scripts/daily.ts",
