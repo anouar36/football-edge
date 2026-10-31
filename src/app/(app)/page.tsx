@@ -145,11 +145,11 @@ export default async function Dashboard() {
                         <Link href={`/matches/${encodeURIComponent(p.matchId)}`} className="flex items-center gap-3">
                           <TeamPair match={p.match} logos={logos} />
                           <div className="min-w-0">
-                            <div className="truncate font-medium">{p.match.home} – {p.match.away}</div>
+                            <div className="truncate font-medium">{p.match.home} vs {p.match.away}</div>
                             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                               <LeagueLogo code={p.match.league} name={leagueName(p.match.league, locale)} src={logos.league(p.match.league)} size={14} />
                               <span>
-                                {leagueName(p.match.league, locale)} · {fmtDate(p.match.kickoff, locale)} <Num>{fmtTime(p.match.kickoff)}</Num>
+                                {leagueName(p.match.league, locale)}, {fmtDate(p.match.kickoff, locale)} <Num>{fmtTime(p.match.kickoff)}</Num>
                               </span>
                             </div>
                           </div>

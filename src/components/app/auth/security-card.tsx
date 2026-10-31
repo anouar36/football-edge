@@ -32,8 +32,11 @@ export async function SecurityCard() {
   const { t, locale } = getT();
   const session = await getSession();
   if (!session) return null;
-  const [list, people] = await Promise.all([(await getAuth()).api.listSessions({ headers: headers() }), peopleWithAccess()]);
-  const sessions: SessionRow[] = list
+  const [list, people] = await Promise.all([
+    (await getAuth()).api.listSessions({ headers: headers() }).catch(() => [session.session]),
+    peopleWithAccess().catch(() => []),
+  ]);
+  const sessions: SessionRow[] = (list ?? [session.session])
     .map((s) => ({
       id: s.id,
       current: s.id === session.session.id,

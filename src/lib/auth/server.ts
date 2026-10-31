@@ -7,7 +7,7 @@ import { z } from "zod";
 import { betterAuth, type BetterAuthPlugin } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError, createAuthEndpoint, createAuthMiddleware, sensitiveSessionMiddleware } from "better-auth/api";
-import { getReadyDb } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import * as schema from "@/lib/schema";
 import { authAccounts, authRateLimits, authSessions, authUsers, authVerifications } from "@/lib/schema";
 import { allowedEmails, isAllowedEmail } from "./allowlist";
@@ -64,6 +64,7 @@ const addUser = {
 function createAuth(db: NodePgDatabase<typeof schema>) {
   return betterAuth({
     appName: "EdgeXI",
+    baseURL: process.env.BETTER_AUTH_URL || (process.env.NODE_ENV === "production" ? undefined : "http://localhost:3000"),
     database: drizzleAdapter(db, {
       provider: "pg",
       schema: { user: authUsers, session: authSessions, account: authAccounts, verification: authVerifications, rateLimit: authRateLimits },
@@ -71,6 +72,8 @@ function createAuth(db: NodePgDatabase<typeof schema>) {
     // Passwords: 8 to 128 characters, hashed with scrypt.
     emailAndPassword: { enabled: true },
     session: {
+      // freshAge: 0 skips Better Auth's 24h freshness check so active sessions don't throw SESSION_NOT_FRESH.
+      freshAge: 0,
       // A signed copy of the session in a cookie (HMAC with BETTER_AUTH_SECRET), valid 5 minutes: the
       // middleware and getSession() read it without the database. After 5 minutes the middleware asks
       // /api/auth/get-session again, which checks the database and renews it. So a session signed out
@@ -130,17 +133,21 @@ const g = globalThis as unknown as { auth?: Auth };
 
 /** Created on first use (not at import), so `next build` does not need the database. */
 export async function getAuth(): Promise<Auth> {
-  const db = await getReadyDb();
-  g.auth ??= createAuth(db);
+  if (!g.auth) {
+    const db = getDb();
+    g.auth = createAuth(db);
+  }
   return g.auth;
 }
+
+const dedupe: <F extends (...args: never[]) => unknown>(fn: F) => F = typeof cache === "function" ? cache : (fn) => fn;
 
 /**
  * The signed-in session for this request, or null (also when the email is no longer allowed).
  * Read from the signed cookie cache when it is fresh (no database), once per request: the layout,
  * the page and the ticket panel share the result. Never cached across requests.
  */
-export const getSession = cache(async (): Promise<AuthSession | null> => {
+export const getSession = dedupe(async (): Promise<AuthSession | null> => {
   const s = await (await getAuth()).api.getSession({ headers: headers() });
   return s && isAllowedEmail(s.user.email) ? s : null;
 });
@@ -162,14 +169,14 @@ export async function denyAnonymous(): Promise<NextResponse | null> {
 
 /** True before the first account exists: the login page then shows "Create your account". */
 export async function isFirstRun(): Promise<boolean> {
-  const db = await getReadyDb();
+  const db = getDb();
   const [any] = await db.select({ id: authUsers.id }).from(authUsers).limit(1);
   return !any;
 }
 
 /** Each email of ALLOWED_EMAILS with its account's name, or null when it has no account yet. */
 export async function peopleWithAccess(): Promise<{ email: string; name: string | null }[]> {
-  const db = await getReadyDb();
+  const db = getDb();
   const users = await db.select({ name: authUsers.name, email: authUsers.email }).from(authUsers);
   const names = new Map(users.map((u) => [u.email.toLowerCase(), u.name]));
   return allowedEmails().map((email) => ({ email, name: names.get(email) ?? null }));

@@ -61,10 +61,10 @@ export default async function SlipPage() {
                     <div className="font-medium">{label(p)}</div>
                     <div className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-muted-foreground">
                       <TeamPair match={p.match} logos={logos} size={16} />
-                      <span>{p.match.home} – {p.match.away} ·</span>
+                      <span>{p.match.home} vs {p.match.away},</span>
                       <LeagueLogo code={p.match.league} name={leagueName(p.match.league, locale)} src={logos.league(p.match.league)} size={14} />
                       <span>
-                        {leagueName(p.match.league, locale)} · <Num>{fmtTime(p.match.kickoff)}</Num> {t.common.utc}
+                        {leagueName(p.match.league, locale)}, <Num>{fmtTime(p.match.kickoff)}</Num> {t.common.utc}
                       </span>
                     </div>
                     <div className="mt-2 flex items-center gap-2">

@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { cachedSettings } from "@/lib/data";
 import { activeProvider, providerStatus, type ProviderId } from "@/lib/llm";
+import { getBotInfo } from "@/lib/telegram/client";
 import { getT } from "@/lib/i18n/server";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +20,11 @@ export default async function SettingsPage() {
   const { id: _id, updatedAt: _u, ...initial } = s;
   const ai = activeProvider(s);
   const allowed = allowedEmails();
+  const botInfo = await getBotInfo().catch(() => null);
+  const telegramBot = {
+    isConfigured: Boolean(process.env.TELEGRAM_TOKEN),
+    username: botInfo?.username || "football_edge_bot",
+  };
   return (
     <div className="flex max-w-5xl flex-col gap-6">
       <PageHeader title={t.settings.title} right={<RunButton ai={ai.keySet ? ai.name : null} />} />
@@ -27,6 +33,7 @@ export default async function SettingsPage() {
         <CardContent className="grid gap-x-10 p-5 sm:grid-cols-2">
           <KV k={t.settings.aiAnalyst} v={<bdi>{ai.name} · {ai.model}</bdi>} />
           <KV k={<>{t.settings.apiKey} <bdi className="text-xs">({ai.keyEnv})</bdi></>} v={<Badge variant={ai.keySet ? "success" : "destructive"}>{ai.keySet ? t.settings.keySet : t.settings.keyMissing}</Badge>} />
+          <KV k={t.settings.telegram.title} v={<Badge variant={telegramBot.isConfigured ? "success" : "destructive"}>{telegramBot.isConfigured ? `@${telegramBot.username}` : t.settings.telegram.botMissing}</Badge>} />
           <KV k={t.settings.dailyJob} v={t.settings.dailyJobValue} />
           <KV
             k={<>{t.settings.allowedEmails} <bdi className="text-xs">(ALLOWED_EMAILS)</bdi></>}
@@ -54,8 +61,15 @@ export default async function SettingsPage() {
         </CardHeader>
       </Card>
       <SettingsForm
-        initial={{ ...initial, language: initial.language as "ar" | "darija" | "fr" | "en", llmProvider: ai.id as ProviderId }}
+        initial={{
+          ...initial,
+          language: initial.language as "ar" | "darija" | "fr" | "en",
+          llmProvider: ai.id as ProviderId,
+          telegramAlerts: initial.telegramAlerts ?? false,
+          telegramChatId: initial.telegramChatId ?? null,
+        }}
         providers={providerStatus()}
+        telegramBot={telegramBot}
       />
       {/* Per-user and read from the database (sessions, people): never cached, streamed after the form. */}
       <Suspense fallback={<CardSkeleton lines={6} />}>

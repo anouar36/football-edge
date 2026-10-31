@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { and, eq, gte } from "drizzle-orm";
 import { picksWithMatch } from "./db";
 import { allLogos } from "./data";
@@ -20,7 +21,9 @@ export interface Logos {
  * Team and league logos, from the cached logo table (data.ts allLogos: no query on most requests).
  * Logos are decoration: if the read fails the page still renders, with initials.
  */
-export async function loadLogos(): Promise<Logos> {
+const dedupe: <F extends (...args: never[]) => unknown>(fn: F) => F = typeof cache === "function" ? cache : (fn) => fn;
+
+export const loadLogos = dedupe(async (): Promise<Logos> => {
   let teams = new Map<string, string>();
   let leagues = new Map<string, string>();
   try {
@@ -31,7 +34,7 @@ export async function loadLogos(): Promise<Logos> {
     console.warn(`[logos] ${(e as Error).message}`);
   }
   return { team: (name, league) => teams.get(`${name}|${league}`) ?? null, league: (code) => leagues.get(code) ?? null };
-}
+});
 
 export async function upcomingPicks() {
   return picksWithMatch(and(eq(picks.result, "PENDING"), gte(matches.kickoff, new Date(Date.now() - 3 * 3_600_000))));
