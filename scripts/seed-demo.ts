@@ -1,4 +1,5 @@
 import "./env";
+import { assertDisposableDatabase } from "./disposable-db";
 /**
  * Fills the database with a SYNTHETIC league so you can explore the dashboard
  * without internet access or an API key. Nothing here is real data.
@@ -14,6 +15,7 @@ import { synthLeague } from "./synthetic";
 import type { HistMatch } from "../src/lib/data/footballdata";
 
 (async () => {
+  assertDisposableDatabase();
   const db = getDb();
   await db.delete(picksT);
   await db.delete(matches);

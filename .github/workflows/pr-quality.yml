@@ -25,6 +25,8 @@ jobs:
           cache: npm
       - name: Install locked dependencies
         run: npm ci --include=dev
+      - name: Disposable database guards
+        run: npm run test:db-guard
       - name: TypeScript
         run: npm run typecheck
       - name: ESLint

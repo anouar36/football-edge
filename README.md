@@ -179,3 +179,7 @@ scripts/                  daily، settle، backtest، اختبارات، بيا�
 ## الجودة والاختبارات
 
 [فحوصات الجودة والاختبارات الآلية](scripts/ci/README.md)
+
+## بيئات التشغيل
+
+[بيئات التشغيل والتجربة والاسترجاع](scripts/ENVIRONMENTS-ar.md)

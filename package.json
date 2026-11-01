@@ -22,7 +22,8 @@
     "qa:security": "tsx scripts/qa/security.ts",
     "qa:pentest": "tsx scripts/qa/deep-pentest.ts",
     "qa:perf": "tsx scripts/perf-test.ts",
-    "qa:ui": "tsx scripts/verify-ui.ts"
+    "qa:ui": "tsx scripts/verify-ui.ts",
+    "test:db-guard": "tsx scripts/qa/disposable-db.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.3.0",
