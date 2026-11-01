@@ -1,8 +1,8 @@
 import "../env";
+import { assertDisposableDatabase } from "../disposable-db";
 /**
  * The daily pipeline against a real Postgres, with fake outside services.
- * Wipes the app tables first, so it only runs on a local database (QA_ALLOW_REMOTE_DB=1 to override,
- * e.g. for a Neon branch). Never point it at production.
+ * Wipes app tables in a disposable local database only. Remote overrides are not supported.
  *   npm run qa:pipeline
  */
 import { spawnSync } from "node:child_process";
@@ -11,12 +11,8 @@ import { fakeAnthropic, fakeFootballData } from "./fakes";
 import { synthLeague } from "../synthetic";
 import { describeDb, pgConfig } from "../../src/lib/db-config";
 
+assertDisposableDatabase();
 const db = pgConfig();
-const local = ["localhost", "127.0.0.1", "::1", "host.docker.internal"].includes(db.host);
-if (!local && process.env.QA_ALLOW_REMOTE_DB !== "1") {
-  console.error(`Refusing to wipe ${describeDb(db)}: not a local database. Set QA_ALLOW_REMOTE_DB=1 for a Neon branch (never production).`);
-  process.exit(1);
-}
 
 const STEP_TIMEOUT = 90_000;
 /** Resolves to "timeout" instead of hanging the test when the code under test never settles. */
