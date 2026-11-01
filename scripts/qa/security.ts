@@ -23,6 +23,62 @@ async function req(path: string, init: RequestInit & { cookie?: string } = {}) {
 const json = (body: unknown) => ({ method: "POST", headers: { "content-type": "application/json", origin: base }, body: JSON.stringify(body) });
 const authPost = (path: string, body: unknown, ip = freshIp()) => req(`/api/auth${path}`, { ...json(body), headers: { "content-type": "application/json", origin: base, "x-forwarded-for": ip } });
 
+
+/** Read generated HTML metadata; never treat arbitrary HTTP 200 as a redirect or 404. */
+function responseMeta(html: string): Record<string, string>[] {
+  const decode = (value: string) => value.replace(
+    /&(#x[0-9a-f]+|#\d+|quot|apos|amp|lt|gt);/gi,
+    (_, entity: string) => {
+      const named: Record<string, string> = {
+        quot: '"', apos: "'", amp: "&", lt: "<", gt: ">"
+      };
+      if (!entity.startsWith("#")) return named[entity.toLowerCase()];
+      const hex = entity.slice(0, 2).toLowerCase() === "#x";
+      const code = parseInt(entity.slice(hex ? 2 : 1), hex ? 16 : 10);
+      return code > 0 && code <= 0x10ffff ? String.fromCodePoint(code) : "";
+    }
+  );
+  return Array.from(html.matchAll(/<meta\b[^>]*>/gi), ([tag]) =>
+    Object.fromEntries(
+      Array.from(tag.matchAll(/([\w:-]+)\s*=\s*(?:"([^"]*)"|'([^']*)')/g),
+        (a) => [a[1].toLowerCase(), decode(a[2] ?? a[3])])
+    )
+  );
+}
+
+
+/** Decode only JSON payloads emitted by Next; never execute script contents. */
+function verifiedStreamedNotFound(html: string): boolean {
+  const noindex = responseMeta(html).some(
+    (a) => a.name?.toLowerCase() === "robots" &&
+      /(?:^|[,\s])noindex(?:$|[,\s])/i.test(a.content ?? "")
+  );
+
+  const parts: string[] = [];
+  for (const match of html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)) {
+    const call = match[1].trim().match(
+      /^self\.__next_f\.push\(([\s\S]*)\)\s*;?$/
+    );
+    if (!call) continue;
+    try {
+      const value: unknown = JSON.parse(call[1]);
+      if (Array.isArray(value) && value[0] === 1 &&
+          typeof value[1] === "string") {
+        parts.push(value[1]);
+      }
+    } catch {
+      // Invalid JSON is not evidence of a not-found response.
+    }
+  }
+
+  const flight = parts.join("");
+  const marker =
+    /<div\b[^>]*\bdata-testid=["']app-not-found["'][^>]*>/i.test(html) ||
+    /"data-testid"\s*:\s*"app-not-found"/.test(flight);
+  const digest = /"digest"\s*:\s*"NEXT_NOT_FOUND"/.test(flight);
+  return noindex && marker && digest;
+}
+
 (async () => {
   console.log(`server: ${base}`);
 
@@ -96,8 +152,24 @@ const authPost = (path: string, body: unknown, ip = freshIp()) => req(`/api/auth
     section("6. Open redirect after sign-in");
     for (const next of ["//evil.example/x", "/\\evil.example", "https://evil.example", "javascript:alert(1)", "/login?next=//evil.example"]) {
       const r = await req(`/login?next=${encodeURIComponent(next)}`, { cookie });
-      const loc = r.headers.get("location") ?? "";
-      check(`next=${next} stays on this site`, r.status === 307 && new URL(loc, base).origin === new URL(base).origin, loc);
+      const loc = r.headers.get("location");
+      const html = await r.text();
+      const targets = responseMeta(html)
+        .filter((a) => a["http-equiv"]?.toLowerCase() === "refresh")
+        .map((a) => a.content?.match(/^\s*\d+(?:\.\d+)?\s*;\s*url\s*=\s*(.*?)\s*$/i)?.[1])
+        .filter((v): v is string => typeof v === "string");
+      const safe = (target: string) => {
+        try {
+          const u = new URL(target, base);
+          return u.origin === new URL(base).origin &&
+            u.pathname === "/" && !u.search && !u.hash &&
+            !u.username && !u.password;
+        } catch { return false; }
+      };
+      const ok = (r.status === 307 && loc !== null && safe(loc)) ||
+        (r.status === 200 && targets.length > 0 && targets.every(safe));
+      check(`next=${next} stays on this site`, ok,
+        `HTTP ${r.status}; redirect targets: ${loc ?? targets.join(", ")}`);
     }
 
     section("7. Input validation (signed in)");
@@ -129,9 +201,22 @@ const authPost = (path: string, body: unknown, ip = freshIp()) => req(`/api/auth
     const f2 = new FormData();
     f2.append("image", new Blob([new Uint8Array(5 * 1024 * 1024 + 10)], { type: "image/png" }), "big.png");
     check("odds image: over 5 MB → 413", (await upload(f2)).status === 413);
+
+    check("ordinary HTTP 200 HTML is not accepted as not-found",
+      !verifiedStreamedNotFound("<html><body>OK</body></html>"));
+    check("noindex and plain marker text are not enough",
+      !verifiedStreamedNotFound('<meta name="robots" content="noindex"><p>app-not-found NEXT_NOT_FOUND</p>'));
+    check("a component marker without a Next not-found digest is not enough",
+      !verifiedStreamedNotFound('<meta name="robots" content="noindex"><div data-testid="app-not-found"></div>'));
+
     for (const p of ["/matches/%E0%A4%A", "/matches/a%25b", "/matches/%25", "/matches/" + "x".repeat(2000)]) {
       const r = await req(p, { cookie });
-      check(`GET ${p.slice(0, 40)}${p.length > 40 ? "…" : ""} → 400 or 404, never 500`, r.status === 400 || r.status === 404, String(r.status));
+      const html = await r.text();
+      const streamedNotFound = r.status === 200 &&
+        verifiedStreamedNotFound(html);
+      check(`GET ${p.slice(0, 40)}${p.length > 40 ? "…" : ""} → explicit rejection or verified streamed not-found`,
+        r.status === 400 || r.status === 404 || streamedNotFound,
+        `HTTP ${r.status}; streamed not-found: ${streamedNotFound}`);
     }
     const html = await (await req("/settings", { cookie })).text();
     check("settings page never contains the value of an API key or secret", !secretsIn(html).length, secretsIn(html).join(", "));
