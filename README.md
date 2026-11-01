@@ -175,3 +175,7 @@ src/
 scripts/                  daily، settle، backtest، اختبارات، بيانات تجريبية
 ```
 # football-edge
+
+## الجودة والاختبارات
+
+[فحوصات الجودة والاختبارات الآلية](scripts/ci/README.md)

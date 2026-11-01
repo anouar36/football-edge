@@ -1,0 +1,167 @@
+name: PR quality gates
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-quality-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Typecheck, lint and model maths
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci --include=dev
+      - name: TypeScript
+        run: npm run typecheck
+      - name: ESLint
+        run: npm run lint
+      - name: Model tests
+        run: npm run test:model
+        env:
+          NODE_OPTIONS: --import=./scripts/ci/local-only-fetch.mjs
+      - name: Money calculations
+        run: npm run qa:money
+        env:
+          NODE_OPTIONS: --import=./scripts/ci/local-only-fetch.mjs
+
+  pipeline:
+    name: Pipeline with disposable PostgreSQL and fake providers
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: fe004
+          POSTGRES_PASSWORD: fe004-ci-only
+          POSTGRES_DB: fe004_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U fe004 -d fe004_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      DATABASE_URL: postgresql://fe004:fe004-ci-only@127.0.0.1:5432/fe004_ci
+      DATABASE_URL_UNPOOLED: postgresql://fe004:fe004-ci-only@127.0.0.1:5432/fe004_ci
+      QA_ALLOW_REMOTE_DB: "0"
+      ANTHROPIC_API_KEY: ""
+      OPENAI_API_KEY: ""
+      GEMINI_API_KEY: ""
+      API_FOOTBALL_KEY: ""
+      APP_URL: ""
+      CRON_SECRET: ""
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci --include=dev
+      - name: Reject environment files in CI checkout
+        run: |
+          node -e 'const fs=require("fs"); const bad=fs.readdirSync(".").filter(n=>n.startsWith(".env")&&n!==".env.example"); if(bad.length){console.error("Unexpected environment files in checkout");process.exit(1)}'
+      - name: Verify disposable database target
+        run: |
+          node -e 'for(const k of ["DATABASE_URL","DATABASE_URL_UNPOOLED"]){const u=new URL(process.env[k]);if(u.hostname!=="127.0.0.1"||u.port!=="5432"||u.pathname!=="/fe004_ci"){throw new Error("Unexpected database target")}}'
+      - name: Prepare disposable schema
+        run: npm run db:push
+      - name: Pipeline tests using local fake CSV and AI
+        run: npm run qa:pipeline
+        env:
+          NODE_OPTIONS: --import=./scripts/ci/local-only-fetch.mjs
+
+  security:
+    name: Authenticated security checks
+    needs: quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: fe004
+          POSTGRES_PASSWORD: fe004-ci-only
+          POSTGRES_DB: fe004_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U fe004 -d fe004_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      CI: "true"
+      NODE_ENV: production
+      NEXT_TELEMETRY_DISABLED: "1"
+      DATABASE_URL: postgresql://fe004:fe004-ci-only@127.0.0.1:5432/fe004_ci
+      DATABASE_URL_UNPOOLED: postgresql://fe004:fe004-ci-only@127.0.0.1:5432/fe004_ci
+      ALLOWED_EMAILS: fe004@example.test
+      QA_EMAIL: fe004@example.test
+      QA_PASSWORD: fe004-synthetic-test-password
+      QA_BASE_URL: http://127.0.0.1:3104
+      BETTER_AUTH_URL: http://127.0.0.1:3104
+      BETTER_AUTH_SECRET: fe004-synthetic-auth-secret-not-for-production
+      CRON_SECRET: fe004-synthetic-cron-secret
+      ANTHROPIC_API_KEY: fe004-synthetic-anthropic-canary
+      OPENAI_API_KEY: fe004-synthetic-openai-canary
+      GEMINI_API_KEY: fe004-synthetic-gemini-canary
+      API_FOOTBALL_KEY: fe004-synthetic-football-canary
+      APP_URL: ""
+      QA_ALLOW_REMOTE_DB: "0"
+      QA_RUN_CRON: "0"
+      QA_EXPECT_SECURE: "1"
+      FE004_EVIDENCE_DIR: .fe004-evidence/security
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci --include=dev
+      - name: Reject environment files in CI checkout
+        run: |
+          node -e 'const fs=require("fs"); const bad=fs.readdirSync(".").filter(n=>n.startsWith(".env")&&n!==".env.example"); if(bad.length){console.error("Unexpected environment files in checkout");process.exit(1)}'
+      - name: Verify disposable database target
+        run: |
+          node -e 'for(const k of ["DATABASE_URL","DATABASE_URL_UNPOOLED"]){const u=new URL(process.env[k]);if(u.hostname!=="127.0.0.1"||u.port!=="5432"||u.pathname!=="/fe004_ci"){throw new Error("Unexpected database target")}}'
+      - name: Prepare disposable schema
+        run: npm run db:push
+      - name: Build production server
+        run: npm run build
+      - name: Run authenticated security suite
+        run: node scripts/ci/run-security.mjs
+
+  gate:
+    name: FE-004 required gate
+    if: always()
+    needs: [quality, pipeline, security]
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Require every suite to succeed
+        env:
+          QUALITY_RESULT: ${{ needs.quality.result }}
+          PIPELINE_RESULT: ${{ needs.pipeline.result }}
+          SECURITY_RESULT: ${{ needs.security.result }}
+        run: |
+          test "$QUALITY_RESULT" = success
+          test "$PIPELINE_RESULT" = success
+          test "$SECURITY_RESULT" = success

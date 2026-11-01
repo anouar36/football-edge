@@ -64,7 +64,8 @@ function ScoreGrid({ scores }: { scores: { score: string; p: number }[] }) {
 
 export default async function MatchPage({ params }: { params: { id: string } }) {
   const { t, locale } = getT();
-  const id = decodeURIComponent(params.id);
+  const id = params.id;
+  if (!id || id.length > 200) notFound();
   const [{ match, picks: matchPicks }, settings, logos] = await Promise.all([matchDetail(id), cachedSettings(), loadLogos()]);
   if (!match) notFound();
   const p = pred(match);
