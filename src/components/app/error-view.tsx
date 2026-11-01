@@ -15,7 +15,33 @@ export interface ErrorProps {
  */
 export function ErrorView({ error, reset }: ErrorProps) {
   const { t } = useT();
-  useEffect(() => console.error(error), [error]);
+
+  const isChunkError =
+    error?.message?.includes("reading 'call'") ||
+    error?.name === "ChunkLoadError" ||
+    error?.message?.includes("Loading chunk");
+
+  useEffect(() => {
+    console.error(error);
+    if (isChunkError && typeof window !== "undefined") {
+      const key = "last_chunk_reload";
+      const last = sessionStorage.getItem(key);
+      const now = Date.now();
+      if (!last || now - Number(last) > 8000) {
+        sessionStorage.setItem(key, String(now));
+        window.location.reload();
+      }
+    }
+  }, [error, isChunkError]);
+
+  const handleRetry = () => {
+    if (isChunkError && typeof window !== "undefined") {
+      window.location.reload();
+    } else {
+      reset();
+    }
+  };
+
   return (
     <div role="alert" className="flex flex-col items-start gap-3">
       <h1 className="text-2xl font-semibold">{t.error.title}</h1>
@@ -24,7 +50,7 @@ export function ErrorView({ error, reset }: ErrorProps) {
         <pre dir="ltr" className="max-w-full whitespace-pre-wrap break-words rounded-md bg-secondary px-3 py-2 text-xs">{error.message}</pre>
       )}
       {error.digest && <p dir="ltr" className="num text-xs text-muted-foreground">{error.digest}</p>}
-      <Button size="sm" variant="outline" onClick={reset}>{t.error.retry}</Button>
+      <Button size="sm" variant="outline" onClick={handleRetry}>{t.error.retry}</Button>
     </div>
   );
 }

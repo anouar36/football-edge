@@ -159,7 +159,7 @@ function LegRow({ leg }: { leg: TicketLeg }) {
             {leg.review && <Badge variant={leg.review.verdict === "AVOID" ? "destructive" : "warning"}>{t.verdict[leg.review.verdict]}</Badge>}
           </div>
           <div className="truncate text-xs text-muted-foreground">
-            {leg.home} – {leg.away} · <Num>{fmtTime(leg.kickoff)}</Num> {t.common.utc}
+            {leg.home} vs {leg.away}, <Num>{fmtTime(leg.kickoff)}</Num> {t.common.utc}
           </div>
         </div>
         <button
@@ -498,22 +498,22 @@ export function TicketPanel({ onHide, className }: { onHide?: () => void; classN
                 <RiskGauge p={math.prob} level={level} />
                 <div className="flex min-w-0 flex-1 flex-col gap-1.5 text-xs">
                   <span className="label-xs">{t.tickets.winChance}</span>
-                  <span className={cn("self-start rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider", RISK_TONE[level].badge, alarm && danger && "motion-safe:animate-risk-pulse")}>
+                  <span className={cn("self-start rounded-md px-2 py-0.5 text-[11px] font-medium", RISK_TONE[level].badge, alarm && danger && "motion-safe:animate-risk-pulse")}>
                     {t.tickets.risk[level]}
                   </span>
                   <div className="flex items-center justify-between gap-2">
                     <span className="flex items-center gap-1 text-muted-foreground">{t.tickets.ev}<Hint>{t.tickets.evHint}</Hint></span>
                     {math.ev != null ? (
                       <Num className={cn("font-semibold", math.ev >= 0 ? "text-success" : "text-destructive")}>
-                        {signedPct(math.ev)} · {signedAmount(stake * math.ev)}
+                        {signedPct(math.ev)}, {signedAmount(stake * math.ev)}
                       </Num>
                     ) : (
-                      <span>—</span>
+                      <span>-</span>
                     )}
                   </div>
                   <div className="flex items-center justify-between gap-2">
                     <span className="flex items-center gap-1 text-muted-foreground">{t.tickets.margin}<Hint>{t.tickets.marginHint}</Hint></span>
-                    <Num className="font-medium">{math.margin != null ? signedPct(math.margin) : "—"}</Num>
+                    <Num className="font-medium">{math.margin != null ? signedPct(math.margin) : "-"}</Num>
                   </div>
                 </div>
               </div>

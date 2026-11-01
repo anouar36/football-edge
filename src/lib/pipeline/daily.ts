@@ -9,6 +9,7 @@ import { fitLeague, predictMatch, type LeagueModel } from "../model/predict";
 import { findValue, isPlayable, type Candidate, type StakeRules } from "../model/value";
 import { marketLabel } from "../model/markets";
 import { activeProvider, getProvider, LLM_TIMEOUTS, type SummaryPick } from "../llm";
+import { sendPicksAlert } from "../telegram/client";
 
 export interface DailyResult {
   runId: string;
@@ -246,6 +247,21 @@ export async function runDaily(
         : null;
 
     await logos;
+
+    const targetChat = settings.telegramChatId || process.env.TELEGRAM_CHAT_ID;
+    if (settings.telegramAlerts && targetChat && saved.length > 0) {
+      try {
+        await sendPicksAlert(targetChat, saved, {
+          currency: settings.currency,
+          language: settings.language,
+          bankroll: settings.bankroll,
+        });
+        say(`Telegram alerts dispatched to chat ${targetChat} (${saved.length} picks)`);
+      } catch (e) {
+        say(`Telegram alert failed: ${(e as Error).message}`);
+      }
+    }
+
     await db
       .update(runs)
       .set({ finishedAt: new Date(), matchesAnalysed: analysed, picksCount: saved.length, summary: summary?.slice(0, 4000) ?? null, log: log.join("\n") })

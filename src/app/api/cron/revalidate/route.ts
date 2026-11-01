@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { z } from "zod";
 import { TAG_PATTERN } from "@/lib/cache";
+import { safeEqual } from "@/lib/auth/timing-safe";
 
 const body = z.object({ tags: z.array(z.string().regex(TAG_PATTERN)).min(1).max(50) });
 
@@ -12,7 +13,8 @@ const body = z.object({ tags: z.array(z.string().regex(TAG_PATTERN)).min(1).max(
  */
 export async function POST(req: Request) {
   const secret = process.env.CRON_SECRET;
-  if (!secret || req.headers.get("authorization") !== `Bearer ${secret}`) {
+  const auth = req.headers.get("authorization");
+  if (!secret || !safeEqual(auth, `Bearer ${secret}`)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const parsed = body.safeParse(await req.json().catch(() => null));

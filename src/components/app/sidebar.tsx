@@ -3,6 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BarChart3, CalendarDays, Home, ListChecks, Settings, Ticket } from "lucide-react";
 import { LanguageSwitch } from "@/components/app/language-switch";
+import { ThemeSwitch } from "@/components/app/theme-switch";
 import { Logo } from "@/components/app/logo";
 import { SignOutButton } from "@/components/app/auth/sign-out-button";
 import { useT } from "@/lib/i18n/client";
@@ -47,19 +48,22 @@ export function Sidebar({ analyst, user }: { analyst: { name: string; keySet: bo
             </Link>
           ))}
         </nav>
-        <div className="mt-auto flex flex-col gap-4">
-          <LanguageSwitch />
+        <div className="mt-auto flex flex-col gap-3">
+          <div className="flex flex-col gap-2">
+            <LanguageSwitch />
+            <ThemeSwitch />
+          </div>
           <div className="flex items-center gap-3 px-2">
             <div className="flex h-9 w-9 items-center justify-center rounded-md bg-secondary text-xs font-semibold">AI</div>
             <div className="leading-tight">
               <div className="text-sm font-medium">{t.sidebar.analyst(analyst.name)}</div>
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground rtl:text-[11px]">{analyst.keySet ? t.sidebar.connected : t.sidebar.noKey}</div>
+              <div className="text-xs text-muted-foreground">{analyst.keySet ? t.sidebar.connected : t.sidebar.noKey}</div>
             </div>
           </div>
           <div className="flex flex-col gap-2 border-t pt-4">
             <div className="flex items-center gap-3 px-2">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-foreground text-xs font-semibold uppercase text-background">
-                {(user.name || user.email).charAt(0)}
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-foreground text-xs font-semibold text-background">
+                {(user.name || user.email).charAt(0).toUpperCase()}
               </div>
               <div className="min-w-0 leading-tight">
                 <div className="truncate text-sm font-medium">{user.name}</div>
@@ -74,8 +78,9 @@ export function Sidebar({ analyst, user }: { analyst: { name: string; keySet: bo
       <header className="sticky top-0 z-20 border-b bg-sidebar/95 backdrop-blur lg:hidden">
         <div className="flex items-center justify-between gap-3 px-4 py-3">
           <Logo className="text-lg" />
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
             <LanguageSwitch />
+            <ThemeSwitch className="w-24 text-[11px]" />
             <SignOutButton iconOnly />
           </div>
         </div>

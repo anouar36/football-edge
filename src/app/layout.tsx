@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { Barlow_Condensed, IBM_Plex_Sans_Arabic, Manrope } from "next/font/google";
 import "./globals.css";
 import { dirOf } from "@/lib/i18n";
@@ -20,10 +21,22 @@ export function generateMetadata(): Metadata {
 /** Wraps both route groups: (app) is the dashboard with the sidebar, (auth) the login page without it. */
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const { locale } = getT();
+  const theme = cookies().get("theme")?.value;
+  const isDark = theme === "dark";
   const fonts = locale === "ar" ? "var(--font-plex-arabic),var(--font-manrope)" : "var(--font-manrope),var(--font-plex-arabic)";
   return (
-    <html lang={locale} dir={dirOf(locale)} className={`${manrope.variable} ${plexArabic.variable} ${barlow.variable}`}>
+    <html
+      lang={locale}
+      dir={dirOf(locale)}
+      className={`${isDark ? "dark " : ""}${manrope.variable} ${plexArabic.variable} ${barlow.variable}`}
+      suppressHydrationWarning
+    >
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem("theme");var d=document.documentElement;if(t==="dark"||(!t&&window.matchMedia("(prefers-color-scheme:dark)").matches)){d.classList.add("dark")}else if(t==="light"){d.classList.remove("dark")}}catch(e){}})();`,
+          }}
+        />
         {/* As raw HTML: as a text child React escapes the quotes on the server only, and hydration fails on every page. */}
         <style dangerouslySetInnerHTML={{ __html: `:root{--font-sans:${fonts};--font-display:var(--font-barlow)}` }} />
       </head>

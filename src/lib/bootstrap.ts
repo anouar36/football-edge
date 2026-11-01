@@ -99,6 +99,7 @@ const UPGRADES = [
   `ALTER TABLE runs ADD COLUMN IF NOT EXISTS created_at timestamp with time zone NOT NULL DEFAULT now()`,
   // One per WHERE / ORDER BY the pages use (lib/data.ts).
   `CREATE INDEX IF NOT EXISTS picks_result_status_idx ON picks (result, status)`,
+  `CREATE INDEX IF NOT EXISTS picks_match_edge_idx ON picks (match_id, edge DESC)`,
   `CREATE INDEX IF NOT EXISTS matches_status_kickoff_idx ON matches (status, kickoff)`,
   `CREATE INDEX IF NOT EXISTS runs_kind_started_idx ON runs (kind, started_at)`,
   `CREATE INDEX IF NOT EXISTS runs_started_idx ON runs (started_at)`,

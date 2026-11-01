@@ -6,16 +6,20 @@ const withBundleAnalyzer = bundleAnalyzer({ enabled: process.env.ANALYZE === "1"
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   poweredByHeader: false,
-  experimental: {
-    // Keep pages fetched during client navigation for 30 s, so going back to a page is instant.
-    // Every action in the app calls router.refresh(), which empties this cache: no stale data after your own click.
-    staleTimes: { dynamic: 30, static: 180 },
+  compress: true,
+  images: {
+    formats: ["image/avif", "image/webp"],
+    minimumCacheTTL: 86400,
+    remotePatterns: [
+      { protocol: "https", hostname: "www.thesportsdb.com" },
+      { protocol: "https", hostname: "media.api-sports.io" },
+    ],
   },
-  // No other site may frame the dashboard (its Place and Settings buttons cannot be clickjacked), no MIME sniffing.
+  // Security headers for all application routes and APIs (excluding internal Next static assets)
   async headers() {
     return [
       {
-        source: "/:path*",
+        source: "/((?!_next/static|_next/image|favicon.ico).*)",
         headers: [
           { key: "X-Frame-Options", value: "DENY" },
           { key: "Content-Security-Policy", value: "frame-ancestors 'none'" },

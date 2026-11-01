@@ -61,7 +61,7 @@ async function SettledTable({ view, page }: { view: HistoryView; page: number })
                   <TeamPair match={p.match} logos={logos} />
                   <div className="min-w-0">
                     <div className="hover:underline">
-                      {p.match.home} <Num>{p.match.homeGoals}–{p.match.awayGoals}</Num> {p.match.away}
+                      {p.match.home} <Num>{p.match.homeGoals}:{p.match.awayGoals}</Num> {p.match.away}
                     </div>
                     <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                       <LeagueLogo code={p.match.league} name={leagueName(p.match.league, locale)} src={logos.league(p.match.league)} size={14} />
@@ -73,8 +73,8 @@ async function SettledTable({ view, page }: { view: HistoryView; page: number })
               <TableCell>{marketLabel(p.key, p.match.home, p.match.away, locale)}</TableCell>
               <TableCell className="text-end"><Num>{p.odds.toFixed(2)}</Num></TableCell>
               <TableCell className="text-end"><Num>{pct(p.prob, 0)}</Num></TableCell>
-              <TableCell className="text-end"><Num>{p.closingOdds?.toFixed(2) ?? "—"}</Num></TableCell>
-              <TableCell className={cn("text-end", p.clv != null && (p.clv >= 0 ? "text-success" : "text-destructive"))}><Num>{p.clv != null ? pct(p.clv) : "—"}</Num></TableCell>
+              <TableCell className="text-end"><Num>{p.closingOdds?.toFixed(2) ?? "-"}</Num></TableCell>
+              <TableCell className={cn("text-end", p.clv != null && (p.clv >= 0 ? "text-success" : "text-destructive"))}><Num>{p.clv != null ? pct(p.clv) : "-"}</Num></TableCell>
               <TableCell className="text-end"><Num>{p.stake.toFixed(2)}</Num></TableCell>
               <TableCell className={cn("text-end font-medium", (p.profit ?? 0) >= 0 ? "text-success" : "text-destructive")}><Num>{(p.profit ?? 0).toFixed(2)}</Num></TableCell>
               <TableCell><ResultBadge result={p.result} status={p.status} /></TableCell>

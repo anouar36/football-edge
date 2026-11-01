@@ -95,6 +95,7 @@ function verifiedStreamedNotFound(html: string): boolean {
   const apis: [string, string][] = [
     ["POST", "/api/run"], ["PUT", "/api/settings"], ["GET", "/api/settings"], ["PATCH", "/api/picks/x"],
     ["POST", "/api/matches/x/picks"], ["POST", "/api/matches/x/odds-image"], ["POST", "/api/tickets"], ["POST", "/api/ticket/explain"],
+    ["GET", "/api/telegram/chats"], ["POST", "/api/telegram/test"],
   ];
   for (const [method, p] of apis) {
     const r = await req(p, { method, headers: { "content-type": "application/json" }, body: method === "GET" ? undefined : "{}" });
